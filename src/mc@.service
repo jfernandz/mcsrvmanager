@@ -1,0 +1,17 @@
+[Unit]
+Description=MC Server (%i) in tmux
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=wyre
+Group=wyre
+EnvironmentFile=-/etc/default/mc/common.env
+EnvironmentFile=-/etc/default/mc/%i.env
+ExecStart=/usr/bin/mc-tmux-start.sh %i
+ExecStop=/usr/bin/mc-tmux-stop.sh %i
+TimeoutStopSec=180
+
+[Install]
+WantedBy=multi-user.target
