@@ -1,0 +1,18 @@
+pkgbase = mcsrvmanager
+	pkgdesc = Templated systemd + tmux Minecraft server manager with backup timer
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = REPLACE_WITH_REPO_URL
+	install = mcsrvmanager.install
+	arch = any
+	license = custom
+	makedepends = asciidoctor
+	depends = bash
+	depends = systemd
+	depends = tmux
+	depends = 7zip
+	depends = java-runtime-headless
+	source = mcsrvmanager-0.1.0.tar.gz::REPLACE_WITH_REPO_URL/archive/refs/tags/v0.1.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = mcsrvmanager
