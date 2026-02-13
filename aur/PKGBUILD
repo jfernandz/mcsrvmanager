@@ -1,5 +1,5 @@
 # Maintainer: wyre
-pkgname=mcsrvmanager
+pkgname=mc-srv-tools
 pkgver=0.1.0
 pkgrel=1
 pkgdesc='Templated systemd + tmux Minecraft server manager with backup timer'
@@ -39,7 +39,7 @@ package() {
   install -m0644 src/mc-common.env.example "$pkgdir/usr/share/doc/$pkgname/examples/mc-common.env.example"
   install -m0644 src/mc-instance.env.example "$pkgdir/usr/share/doc/$pkgname/examples/mc-instance.env.example"
 
-  asciidoctor -b manpage -o "$srcdir/mcsrvmanager.7" src/mcsrvmanager.7.adoc
-  gzip -n -9 "$srcdir/mcsrvmanager.7"
-  install -m0644 "$srcdir/mcsrvmanager.7.gz" "$pkgdir/usr/share/man/man7/mcsrvmanager.7.gz"
+  asciidoctor -b manpage -o "$srcdir/mc-srv-tools.7" src/mc-srv-tools.7.adoc
+  gzip -n -9 "$srcdir/mc-srv-tools.7"
+  install -m0644 "$srcdir/mc-srv-tools.7.gz" "$pkgdir/usr/share/man/man7/mc-srv-tools.7.gz"
 }

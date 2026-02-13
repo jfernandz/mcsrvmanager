@@ -1,15 +1,15 @@
-= mcsrvmanager(7)
+= mc-srv-tools(7)
 :doctype: manpage
-:manmanual: mcsrvmanager Manual
-:mansource: mcsrvmanager 0.1.0
+:manmanual: mc-srv-tools Manual
+:mansource: mc-srv-tools 0.1.0
 
 == NAME
 
-mcsrvmanager - systemd and tmux based Minecraft server instance manager with scheduled backups
+mc-srv-tools - systemd and tmux based Minecraft server instance manager with scheduled backups
 
 == DESCRIPTION
 
-mcsrvmanager provides templated systemd units and helper scripts to run one or more
+mc-srv-tools provides templated systemd units and helper scripts to run one or more
 Minecraft servers as named instances.
 
 Each instance:
@@ -61,7 +61,7 @@ tmux session name. Default: `mc-<instance>`.
 Command sent to server console on stop. Default: `stop`.
 
 `MC_STOP_TIMEOUT`::
-Seconds to wait for graceful stop before force-killing tmux session.
+Seconds to wait for graceful stop before failing stop operation.
 
 `MC_BACKUP_DIR`::
 Required. Output directory for backup archives.
@@ -138,9 +138,9 @@ tmux attach -t mc-fabric_kmz
 
 `/etc/systemd/system/mc-backup@<instance>.timer`
 
-`/usr/share/doc/mcsrvmanager/examples/mc-common.env.example`
+`/usr/share/doc/mc-srv-tools/examples/mc-common.env.example`
 
-`/usr/share/doc/mcsrvmanager/examples/mc-instance.env.example`
+`/usr/share/doc/mc-srv-tools/examples/mc-instance.env.example`
 
 == SEE ALSO
 

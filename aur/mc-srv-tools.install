@@ -2,11 +2,11 @@ post_install() {
   systemctl daemon-reload >/dev/null 2>&1 || true
   cat <<MSG
 
-mcsrvmanager installed.
+mc-srv-tools installed.
 
 Next steps:
   1. Copy env examples from:
-     /usr/share/doc/mcsrvmanager/examples/
+     /usr/share/doc/mc-srv-tools/examples/
      to /etc/default/mc/common.env and /etc/default/mc/<instance>.env
   2. Enable an instance:
      sudo systemctl enable --now mc@<instance>.service
