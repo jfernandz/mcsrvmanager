@@ -1,6 +1,6 @@
 # Maintainer: wyre
 pkgname=mc-srv-tools
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc='Templated systemd + tmux Minecraft server manager with backup timer'
 arch=('any')
@@ -11,6 +11,8 @@ makedepends=('asciidoctor')
 install="$pkgname.install"
 
 _repo_url='https://github.com/jfernandz/mcsrvmanager'
+_repo_name='srv-tools'
+_pkg_subdir='mc-srv-tools'
 
 source=(
   "${pkgname}-${pkgver}.tar.gz::${_repo_url}/archive/refs/tags/v${pkgver}.tar.gz"
@@ -18,7 +20,7 @@ source=(
 sha256sums=('SKIP')
 
 package() {
-  cd "$srcdir/${pkgname}-${pkgver}"
+  cd "$srcdir/${_repo_name}-${pkgver}/${_pkg_subdir}"
 
   install -d "$pkgdir/usr/bin"
   install -d "$pkgdir/usr/lib/systemd/system"
