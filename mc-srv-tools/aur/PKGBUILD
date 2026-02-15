@@ -15,7 +15,7 @@ _repo_name='srv-tools'
 _pkg_subdir='mc-srv-tools'
 
 source=(
-  "${pkgname}-${pkgver}.tar.gz::${_repo_url}/archive/refs/tags/v${pkgver}.tar.gz"
+  "${pkgname}-${pkgver}.tar.gz::${_repo_url}/archive/refs/tags/${pkgname}-v${pkgver}.tar.gz"
 )
 sha256sums=('SKIP')
 
