@@ -1,0 +1,16 @@
+pkgbase = backup-tools
+	pkgdesc = Config-driven systemd backup unit generator and runner
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/jfernandz/srv-tools.git
+	arch = any
+	license = custom
+	makedepends = asciidoctor
+	depends = bash
+	depends = systemd
+	depends = 7zip
+	depends = yq
+	source = backup-tools-0.1.0.tar.gz::https://github.com/jfernandz/srv-tools/archive/refs/tags/backup-tools-v0.1.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = backup-tools

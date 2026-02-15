@@ -1,0 +1,36 @@
+# Maintainer: wyre
+pkgname=backup-tools
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Config-driven systemd backup unit generator and runner'
+arch=('any')
+url='https://github.com/jfernandz/srv-tools.git'
+license=('custom')
+depends=('bash' 'systemd' '7zip' 'yq')
+makedepends=('asciidoctor')
+
+_repo_url='https://github.com/jfernandz/srv-tools'
+_repo_name='srv-tools'
+_pkg_subdir='backup'
+
+source=(
+  "${pkgname}-${pkgver}.tar.gz::${_repo_url}/archive/refs/tags/${pkgname}-v${pkgver}.tar.gz"
+)
+sha256sums=('SKIP')
+
+package() {
+  cd "$srcdir/${_repo_name}-${pkgver}/${_pkg_subdir}"
+
+  install -d "$pkgdir/usr/bin"
+  install -d "$pkgdir/usr/share/doc/$pkgname/examples"
+  install -d "$pkgdir/usr/share/man/man7"
+
+  install -m0755 src/backup.sh "$pkgdir/usr/bin/backup.sh"
+  install -m0755 src/backup-units-generator.sh "$pkgdir/usr/bin/backup-units-generator.sh"
+
+  install -m0644 src/backup-config.example.yaml "$pkgdir/usr/share/doc/$pkgname/examples/backup-config.example.yaml"
+
+  asciidoctor -b manpage -o "$srcdir/backup-tools.7" src/backup-tools.7.adoc
+  gzip -n -9 "$srcdir/backup-tools.7"
+  install -m0644 "$srcdir/backup-tools.7.gz" "$pkgdir/usr/share/man/man7/backup-tools.7.gz"
+}

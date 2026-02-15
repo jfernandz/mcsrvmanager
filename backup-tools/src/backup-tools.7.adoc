@@ -1,0 +1,149 @@
+= backup-tools(7)
+:doctype: manpage
+:manmanual: backup-tools Manual
+:mansource: backup-tools 0.1.0
+
+== NAME
+
+backup-tools - config-driven systemd backup unit generator and runner
+
+== DESCRIPTION
+
+backup-tools provides two scripts to schedule and run backups for systemd services:
+
+- `backup-units-generator.sh`: reads YAML/JSON config and generates per-service backup units and runtime config files.
+- `backup.sh`: oneshot backup runner used by generated service units.
+
+The workflow is intentionally generic and service-agnostic.
+
+== REQUIREMENTS
+
+- bash
+- systemd
+- 7z
+- yq (mikefarah/yq)
+
+== CONFIGURATION
+
+Input config must be YAML or JSON and define services under a `services:` block.
+Service keys are service names *without* the `.service` suffix.
+Optional top-level `paths:` defines a separate generic backup job.
+`paths:` may be either a list of paths or a mapping with `dirs` and optional overrides.
+
+Top-level fallback keys:
+
+- `output_dir`
+- `compression_lvl`
+- `retention_days`
+- `on_calendar`
+- `randomized_delay`
+- `persistent`
+- `stop_wait_seconds`
+- `restart_after_backup`
+
+Per-service keys:
+
+- `dirs` (required)
+- `output_dir` (required unless provided globally)
+- `exclude_patterns` (optional, plain patterns)
+- `compression_lvl`
+- `retention_days`
+- `on_calendar`
+- `randomized_delay`
+- `persistent`
+- `stop_wait_seconds`
+- `restart_after_backup`
+
+If `exclude_patterns` is omitted, no excludes are applied.
+
+== COMMANDS
+
+Generate units and runtime configs:
+
+----
+backup-units-generator.sh \
+  --config /etc/backup/config.yaml \
+  --units-dir /etc/systemd/system \
+  --service-config-dir /etc/backup
+----
+
+Run backup manually from generated config:
+
+----
+backup.sh /etc/backup/<service>.conf
+----
+
+== GENERATED ARTIFACTS
+
+For each valid service entry:
+
+- `backup-<service>.service`
+- `backup-<service>.timer`
+- `<service-config-dir>/<service>.conf`
+
+If top-level `paths:` is present and non-empty:
+
+- `backup-paths.service`
+- `backup-paths.timer`
+- `<service-config-dir>/paths.conf`
+
+If a service key does not map to an existing `<name>.service` unit on the system,
+that entry is skipped and no artifacts are generated for it.
+
+== BACKUP BEHAVIOR
+
+`backup.sh` performs:
+
+1. Load generated config
+2. If `SERVICE_NAME` is set, stop target service
+3. If `SERVICE_NAME` is set, wait up to `STOP_WAIT_SECONDS` for full stop
+4. Create archive with `7z` from `BACKUP_DIRS`
+5. Apply excludes as `-xr!<pattern>` for each entry in `EXCLUDE_PATTERNS`
+6. Delete archives older than `BACKUP_RETENTION_DAYS`
+7. If `SERVICE_NAME` is set, restart service if it was active and `RESTART_AFTER_BACKUP=true`
+
+Archive naming format:
+
+- `<BACKUP_PREFIX>_<YYYY-MM-DD_HH-MM-SS>.7z`
+
+== EXAMPLE
+
+----
+output_dir: /srv/backups
+compression_lvl: 3
+retention_days: 14
+on_calendar: "*-*-* 11:30:00"
+randomized_delay: 15m
+persistent: true
+
+paths:
+  - /etc
+  - /usr/local/bin
+  - /home/wyre/somefolder/id/like/tobackup
+
+services:
+  mc@fabric_kmz:
+    dirs:
+      - /home/wyre/mcserver/Fabric/fabric_kmz
+    output_dir: /home/wyre/mcserver/backups
+    exclude_patterns:
+      - 'dynmap/web/*'
+
+  httpd:
+    dirs:
+      - /etc/httpd
+      - /var/www
+    output_dir: /srv/backups/httpd
+    exclude_patterns:
+      - '*.tmp'
+    compression_lvl: 5
+    retention_days: 21
+    on_calendar: "*-*-* 03:15:00"
+    randomized_delay: 5m
+    persistent: true
+    restart_after_backup: false
+----
+
+== SEE ALSO
+
+systemd(1), systemd.service(5), systemd.timer(5), 7z(1), yq(1)
