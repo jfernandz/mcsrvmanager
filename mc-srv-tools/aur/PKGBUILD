@@ -1,6 +1,6 @@
 # Maintainer: wyre
 pkgname=mc-srv-tools
-pkgver=0.2.0
+pkgver=0.3.0
 pkgrel=1
 pkgdesc='Templated systemd + tmux Minecraft server manager'
 arch=('any')
@@ -36,6 +36,7 @@ package() {
 
   install -m0644 src/mc-common.env.example "$pkgdir/usr/share/doc/$pkgname/examples/mc-common.env.example"
   install -m0644 src/mc-instance.env.example "$pkgdir/usr/share/doc/$pkgname/examples/mc-instance.env.example"
+  install -m0644 src/mc-stop-warn.commands.example "$pkgdir/usr/share/doc/$pkgname/examples/mc-stop-warn.commands.example"
 
   asciidoctor -b manpage \
     -a "mansource=${pkgname} ${pkgver}" \
