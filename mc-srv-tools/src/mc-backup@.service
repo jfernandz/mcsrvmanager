@@ -1,8 +1,0 @@
-[Unit]
-Description=Stop MC (%i), backup, restart
-
-[Service]
-Type=oneshot
-EnvironmentFile=-/etc/default/mc/common.env
-EnvironmentFile=-/etc/default/mc/%i.env
-ExecStart=/usr/bin/mc-backup.sh %i

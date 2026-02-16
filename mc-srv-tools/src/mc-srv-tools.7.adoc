@@ -5,7 +5,7 @@
 
 == NAME
 
-mc-srv-tools - systemd and tmux based Minecraft server instance manager with scheduled backups
+mc-srv-tools - systemd and tmux based Minecraft server instance manager
 
 == DESCRIPTION
 
@@ -16,22 +16,11 @@ Each instance:
 
 - runs in its own tmux session
 - is controlled by `mc@<instance>.service`
-- can be backed up via `mc-backup@<instance>.service`
-- can be scheduled via `mc-set-backup-timer.sh <instance>`
-
-Backups are created with 7-Zip and exclude dynmap tile data (`dynmap/web`) by default.
 
 == UNITS
 
 `mc@.service`::
 Starts and stops a Minecraft instance in a tmux session.
-
-`mc-backup@.service`::
-One-shot job: stop instance, backup files, start instance.
-
-`mc-set-backup-timer.sh`::
-Generates `/etc/systemd/system/mc-backup@<instance>.timer` from env settings
-and enables it.
 
 == CONFIGURATION
 
@@ -63,43 +52,12 @@ Command sent to server console on stop. Default: `stop`.
 `MC_STOP_TIMEOUT`::
 Seconds to wait for graceful stop before failing stop operation.
 
-`MC_BACKUP_DIR`::
-Required. Output directory for backup archives.
-
-`MC_BACKUP_PREFIX`::
-Archive filename prefix. Default: instance name.
-
-`MC_BACKUP_LEVEL`::
-7z compression level. Default: `3`.
-
-`MC_BACKUP_RETENTION_DAYS`::
-Delete backup archives older than this value. Default: `14`.
-
-`MC_BACKUP_EXCLUDES`::
-Optional extra 7z exclude patterns (space-separated).
-
-`MC_BACKUP_ON_CALENDAR`::
-Per-instance timer schedule (same format as `OnCalendar=`). Default: `*-*-* 11:30:00`.
-
-`MC_BACKUP_RANDOMIZED_DELAY_SEC`::
-Per-instance timer jitter. Default: `15m`.
-
-`MC_BACKUP_PERSISTENT`::
-Run missed backups after downtime (`true` or `false`). Default: `true`.
-
 == EXAMPLES
 
 Enable and start one instance named `fabric_kmz`:
 
 ----
 systemctl enable --now mc@fabric_kmz.service
-mc-set-backup-timer.sh fabric_kmz
-----
-
-Run backup immediately:
-
-----
-systemctl start mc-backup@fabric_kmz.service
 ----
 
 Attach to the instance console:
@@ -108,35 +66,17 @@ Attach to the instance console:
 tmux attach -t mc-fabric_kmz
 ----
 
-== BACKUP WORKFLOW
-
-`mc-backup@<instance>.service` executes `mc-backup.sh`, which performs:
-
-. `systemctl stop mc@<instance>.service`
-. archive server directory with 7z
-. exclude dynmap tile paths (`dynmap/web`)
-. delete expired archives by retention policy
-. `systemctl start mc@<instance>.service`
-
 == FILES
 
 `/usr/lib/systemd/system/mc@.service`
-
-`/usr/lib/systemd/system/mc-backup@.service`
 
 `/usr/bin/mc-tmux-start.sh`
 
 `/usr/bin/mc-tmux-stop.sh`
 
-`/usr/bin/mc-backup.sh`
-
-`/usr/bin/mc-set-backup-timer.sh`
-
 `/etc/default/mc/common.env`
 
 `/etc/default/mc/<instance>.env`
-
-`/etc/systemd/system/mc-backup@<instance>.timer`
 
 `/usr/share/doc/mc-srv-tools/examples/mc-common.env.example`
 
@@ -144,4 +84,4 @@ tmux attach -t mc-fabric_kmz
 
 == SEE ALSO
 
-systemd(1), systemd.service(5), systemd.timer(5), tmux(1), 7z(1), java(1)
+systemd(1), systemd.service(5), tmux(1), java(1)
