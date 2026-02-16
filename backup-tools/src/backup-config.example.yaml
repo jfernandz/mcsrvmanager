@@ -5,6 +5,7 @@ retention_days: 14
 on_calendar: "*-*-* 11:30:00"
 randomized_delay: 15m
 persistent: true
+owner: wyre
 
 paths:
   - /etc
@@ -17,7 +18,7 @@ services:
       - /home/wyre/mcserver/Fabric/fabric_kmz
     output_dir: /home/wyre/mcserver/backups
     exclude_patterns:
-      - 'dynmap/web/*'
+      - '*/dynmap/web/*'
 
   httpd:
     dirs:
@@ -31,4 +32,5 @@ services:
     on_calendar: "*-*-* 03:15:00"
     randomized_delay: 5m
     persistent: true
+    owner: root
     restart_after_backup: false

@@ -54,6 +54,7 @@ Top-level fallback keys:
 - `on_calendar`
 - `randomized_delay`
 - `persistent`
+- `owner`
 - `stop_wait_seconds`
 - `restart_after_backup`
 
@@ -64,7 +65,7 @@ Optional top-level `paths:` creates a separate generic backup job.
 `paths:` can be either:
 
 - a list of directories/files
-- a mapping with `dirs` and optional overrides (`output_dir`, `compression_lvl`, etc.)
+- a mapping with `dirs` and optional overrides (`output_dir`, `compression_lvl`, `owner`, etc.)
 
 Per-service keys:
 
@@ -76,6 +77,7 @@ Per-service keys:
 - `on_calendar`
 - `randomized_delay`
 - `persistent`
+- `owner` (`user` or `user:group`)
 - `stop_wait_seconds`
 - `restart_after_backup`
 
@@ -89,6 +91,7 @@ retention_days: 14
 on_calendar: "*-*-* 11:30:00"
 randomized_delay: 15m
 persistent: true
+owner: wyre
 
 paths:
   - /etc
@@ -115,6 +118,7 @@ services:
     on_calendar: "*-*-* 03:15:00"
     randomized_delay: 5m
     persistent: true
+    owner: root
     restart_after_backup: false
 ----
 
@@ -180,6 +184,7 @@ BACKUP_DIR=/home/wyre/mcserver/backups
 BACKUP_LEVEL=3
 BACKUP_RETENTION_DAYS=14
 BACKUP_PREFIX=mc@fabric_kmz
+BACKUP_OWNER=wyre
 STOP_WAIT_SECONDS=300
 RESTART_AFTER_BACKUP=true
 BACKUP_DIRS=(
@@ -225,6 +230,7 @@ BACKUP_DIR=/srv/backups/httpd
 BACKUP_LEVEL=5
 BACKUP_RETENTION_DAYS=21
 BACKUP_PREFIX=httpd
+BACKUP_OWNER=root
 STOP_WAIT_SECONDS=300
 RESTART_AFTER_BACKUP=false
 BACKUP_DIRS=(
@@ -270,6 +276,7 @@ BACKUP_DIR=/srv/backups
 BACKUP_LEVEL=3
 BACKUP_RETENTION_DAYS=14
 BACKUP_PREFIX=paths
+BACKUP_OWNER=wyre
 STOP_WAIT_SECONDS=300
 RESTART_AFTER_BACKUP=false
 BACKUP_DIRS=(
@@ -289,7 +296,8 @@ EXCLUDE_PATTERNS=()
 3. If `SERVICE_NAME` is set: wait for stop (up to `STOP_WAIT_SECONDS`)
 4. Create archive with `7z` from `BACKUP_DIRS` + `EXCLUDE_PATTERNS`
 5. Delete old archives using `BACKUP_RETENTION_DAYS`
-6. If `SERVICE_NAME` is set: restart service if it was active and `RESTART_AFTER_BACKUP=true`
+6. If `BACKUP_OWNER` is set: apply owner to archive file (`chown`)
+7. If `SERVICE_NAME` is set: restart service if it was active and `RESTART_AFTER_BACKUP=true`
 
 Archive naming:
 

@@ -28,7 +28,7 @@ The workflow is intentionally generic and service-agnostic.
 Input config must be YAML or JSON and define services under a `services:` block.
 Service keys are service names *without* the `.service` suffix.
 Optional top-level `paths:` defines a separate generic backup job.
-`paths:` may be either a list of paths or a mapping with `dirs` and optional overrides.
+`paths:` may be either a list of paths or a mapping with `dirs` and optional overrides (including `owner`).
 
 Top-level fallback keys:
 
@@ -38,6 +38,7 @@ Top-level fallback keys:
 - `on_calendar`
 - `randomized_delay`
 - `persistent`
+- `owner`
 - `stop_wait_seconds`
 - `restart_after_backup`
 
@@ -51,6 +52,7 @@ Per-service keys:
 - `on_calendar`
 - `randomized_delay`
 - `persistent`
+- `owner` (`user` or `user:group`)
 - `stop_wait_seconds`
 - `restart_after_backup`
 
@@ -102,7 +104,8 @@ that entry is skipped and no artifacts are generated for it.
 4. Create archive with `7z` from `BACKUP_DIRS`
 5. Apply excludes as `-xr!<pattern>` for each entry in `EXCLUDE_PATTERNS`
 6. Delete archives older than `BACKUP_RETENTION_DAYS`
-7. If `SERVICE_NAME` is set, restart service if it was active and `RESTART_AFTER_BACKUP=true`
+7. If `BACKUP_OWNER` is set, apply owner to archive file (`chown`)
+8. If `SERVICE_NAME` is set, restart service if it was active and `RESTART_AFTER_BACKUP=true`
 
 Archive naming format:
 
@@ -117,6 +120,7 @@ retention_days: 14
 on_calendar: "*-*-* 11:30:00"
 randomized_delay: 15m
 persistent: true
+owner: wyre
 
 paths:
   - /etc
@@ -143,6 +147,7 @@ services:
     on_calendar: "*-*-* 03:15:00"
     randomized_delay: 5m
     persistent: true
+    owner: root
     restart_after_backup: false
 ----
 

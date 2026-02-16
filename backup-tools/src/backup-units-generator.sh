@@ -164,6 +164,9 @@ for raw_service in "${!SERVICES[@]}"; do
   persistent_raw="$(yq -r --arg s "$raw_service" \
     '. as $root | (($root.services[$s] // {}) | .persistent // $root.defaults.persistent // $root.persistent // true)' \
     "$CONFIG_PATH")"
+  backup_owner="$(yq -r --arg s "$raw_service" \
+    '. as $root | (($root.services[$s] // {}) | .owner // $root.defaults.owner // $root.owner // "")' \
+    "$CONFIG_PATH")"
   stop_wait_seconds="$(yq -r --arg s "$raw_service" \
     '. as $root | (($root.services[$s] // {}) | .stop_wait_seconds // $root.defaults.stop_wait_seconds // $root.stop_wait_seconds // 300)' \
     "$CONFIG_PATH")"
@@ -185,6 +188,7 @@ for raw_service in "${!SERVICES[@]}"; do
     printf 'BACKUP_LEVEL=%q\n' "$backup_level"
     printf 'BACKUP_RETENTION_DAYS=%q\n' "$retention_days"
     printf 'BACKUP_PREFIX=%q\n' "$raw_service"
+    printf 'BACKUP_OWNER=%q\n' "$backup_owner"
     printf 'STOP_WAIT_SECONDS=%q\n' "$stop_wait_seconds"
     printf 'RESTART_AFTER_BACKUP=%q\n' "$restart_after_backup"
     write_bash_array "BACKUP_DIRS" "${backup_dirs[@]}"
@@ -256,6 +260,9 @@ if [[ "$paths_block_exists" == "true" ]]; then
   paths_persistent_raw="$(yq -r \
     '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .persistent) // $root.defaults.persistent // $root.persistent // true)' \
     "$CONFIG_PATH")"
+  paths_backup_owner="$(yq -r \
+    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .owner) // $root.defaults.owner // $root.owner // "")' \
+    "$CONFIG_PATH")"
   paths_stop_wait_seconds="$(yq -r \
     '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .stop_wait_seconds) // $root.defaults.stop_wait_seconds // $root.stop_wait_seconds // 300)' \
     "$CONFIG_PATH")"
@@ -272,6 +279,7 @@ if [[ "$paths_block_exists" == "true" ]]; then
     printf 'BACKUP_LEVEL=%q\n' "$paths_backup_level"
     printf 'BACKUP_RETENTION_DAYS=%q\n' "$paths_retention_days"
     printf 'BACKUP_PREFIX=%q\n' "paths"
+    printf 'BACKUP_OWNER=%q\n' "$paths_backup_owner"
     printf 'STOP_WAIT_SECONDS=%q\n' "$paths_stop_wait_seconds"
     printf 'RESTART_AFTER_BACKUP=%q\n' "false"
     write_bash_array "BACKUP_DIRS" "${paths_backup_dirs[@]}"
