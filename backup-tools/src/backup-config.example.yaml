@@ -6,6 +6,7 @@ on_calendar: "*-*-* 11:30:00"
 randomized_delay: 15m
 persistent: true
 owner: wyre
+path_mode: target
 
 paths:
   - /etc
@@ -34,3 +35,4 @@ services:
     persistent: true
     owner: root
     restart_after_backup: false
+    path_mode: target

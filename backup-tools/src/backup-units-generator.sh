@@ -84,6 +84,25 @@ normalize_bool() {
   fi
 }
 
+normalize_path_mode() {
+  local value="${1:-}"
+  local fallback="${2:-target}"
+  local normalized="${value,,}"
+  if [[ -z "$normalized" || "$normalized" == "null" ]]; then
+    printf '%s\n' "$fallback"
+    return
+  fi
+  case "$normalized" in
+    preserve|target|contents)
+      printf '%s\n' "$normalized"
+      ;;
+    *)
+      echo "invalid path_mode: $value (expected: target|preserve|contents)" >&2
+      exit 1
+      ;;
+  esac
+}
+
 write_bash_array() {
   local var_name="$1"
   shift
@@ -173,9 +192,13 @@ for raw_service in "${!SERVICES[@]}"; do
   restart_after_backup_raw="$(yq -r --arg s "$raw_service" \
     '. as $root | (($root.services[$s] // {}) | .restart_after_backup // $root.defaults.restart_after_backup // $root.restart_after_backup // true)' \
     "$CONFIG_PATH")"
+  path_mode_raw="$(yq -r --arg s "$raw_service" \
+    '. as $root | (($root.services[$s] // {}) | .path_mode // $root.defaults.path_mode // $root.path_mode // "target")' \
+    "$CONFIG_PATH")"
 
   persistent="$(normalize_bool "$persistent_raw" "true")"
   restart_after_backup="$(normalize_bool "$restart_after_backup_raw" "true")"
+  path_mode="$(normalize_path_mode "$path_mode_raw" "target")"
 
   config_path="$SERVICE_CONFIG_DIR/${raw_service}.conf"
   service_unit_path="$UNITS_DIR/${backup_unit_name}.service"
@@ -191,6 +214,7 @@ for raw_service in "${!SERVICES[@]}"; do
     printf 'BACKUP_OWNER=%q\n' "$backup_owner"
     printf 'STOP_WAIT_SECONDS=%q\n' "$stop_wait_seconds"
     printf 'RESTART_AFTER_BACKUP=%q\n' "$restart_after_backup"
+    printf 'PATH_MODE=%q\n' "$path_mode"
     write_bash_array "BACKUP_DIRS" "${backup_dirs[@]}"
     write_bash_array "EXCLUDE_PATTERNS" "${excludes[@]}"
   } > "$config_path"
@@ -266,8 +290,12 @@ if [[ "$paths_block_exists" == "true" ]]; then
   paths_stop_wait_seconds="$(yq -r \
     '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .stop_wait_seconds) // $root.defaults.stop_wait_seconds // $root.stop_wait_seconds // 300)' \
     "$CONFIG_PATH")"
+  paths_path_mode_raw="$(yq -r \
+    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .path_mode) // $root.defaults.path_mode // $root.path_mode // "target")' \
+    "$CONFIG_PATH")"
 
   paths_persistent="$(normalize_bool "$paths_persistent_raw" "true")"
+  paths_path_mode="$(normalize_path_mode "$paths_path_mode_raw" "target")"
 
   paths_config_path="$SERVICE_CONFIG_DIR/paths.conf"
   paths_service_unit_path="$UNITS_DIR/backup-paths.service"
@@ -282,6 +310,7 @@ if [[ "$paths_block_exists" == "true" ]]; then
     printf 'BACKUP_OWNER=%q\n' "$paths_backup_owner"
     printf 'STOP_WAIT_SECONDS=%q\n' "$paths_stop_wait_seconds"
     printf 'RESTART_AFTER_BACKUP=%q\n' "false"
+    printf 'PATH_MODE=%q\n' "$paths_path_mode"
     write_bash_array "BACKUP_DIRS" "${paths_backup_dirs[@]}"
     write_bash_array "EXCLUDE_PATTERNS" "${paths_excludes[@]}"
   } > "$paths_config_path"

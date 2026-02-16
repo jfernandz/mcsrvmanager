@@ -1,7 +1,7 @@
 = backup-tools(7)
 :doctype: manpage
 :manmanual: backup-tools Manual
-:mansource: backup-tools 0.1.0
+:mansource: backup-tools
 
 == NAME
 
@@ -41,6 +41,7 @@ Top-level fallback keys:
 - `owner`
 - `stop_wait_seconds`
 - `restart_after_backup`
+- `path_mode` (`target` | `preserve` | `contents`, default `target`)
 
 Per-service keys:
 
@@ -55,6 +56,7 @@ Per-service keys:
 - `owner` (`user` or `user:group`)
 - `stop_wait_seconds`
 - `restart_after_backup`
+- `path_mode` (`target` | `preserve` | `contents`)
 
 If `exclude_patterns` is omitted, no excludes are applied.
 
@@ -102,6 +104,9 @@ that entry is skipped and no artifacts are generated for it.
 2. If `SERVICE_NAME` is set, stop target service
 3. If `SERVICE_NAME` is set, wait up to `STOP_WAIT_SECONDS` for full stop
 4. Create archive with `7z` from `BACKUP_DIRS`
+   - `path_mode=target`: store each source under only its target folder name (default behavior)
+   - `path_mode=preserve`: keep full source path context (for absolute paths, archive paths like `etc/httpd/...`)
+   - `path_mode=contents`: store only each source folder contents (no top folder wrapper)
 5. Apply excludes as `-xr!<pattern>` for each entry in `EXCLUDE_PATTERNS`
 6. Delete archives older than `BACKUP_RETENTION_DAYS`
 7. If `BACKUP_OWNER` is set, apply owner to archive file (`chown`)
@@ -121,6 +126,7 @@ on_calendar: "*-*-* 11:30:00"
 randomized_delay: 15m
 persistent: true
 owner: wyre
+path_mode: target
 
 paths:
   - /etc
@@ -149,6 +155,7 @@ services:
     persistent: true
     owner: root
     restart_after_backup: false
+    path_mode: target
 ----
 
 == SEE ALSO

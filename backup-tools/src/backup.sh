@@ -19,6 +19,8 @@ BACKUP_PREFIX="${BACKUP_PREFIX:-${SERVICE_NAME%.service}}"
 BACKUP_OWNER="${BACKUP_OWNER:-}"
 STOP_WAIT_SECONDS="${STOP_WAIT_SECONDS:-300}"
 RESTART_AFTER_BACKUP="${RESTART_AFTER_BACKUP:-true}"
+PATH_MODE="${PATH_MODE:-target}"
+PATH_MODE="${PATH_MODE,,}"
 
 declare -p BACKUP_DIRS >/dev/null 2>&1 || BACKUP_DIRS=()
 declare -p EXCLUDE_PATTERNS >/dev/null 2>&1 || EXCLUDE_PATTERNS=()
@@ -27,6 +29,13 @@ if [[ "${#BACKUP_DIRS[@]}" -eq 0 ]]; then
   echo "BACKUP_DIRS must include at least one directory" >&2
   exit 1
 fi
+
+for backup_dir in "${BACKUP_DIRS[@]}"; do
+  if [[ ! -d "$backup_dir" ]]; then
+    echo "backup source is not a directory: $backup_dir" >&2
+    exit 1
+  fi
+done
 
 mkdir -p "$BACKUP_DIR"
 
@@ -87,7 +96,54 @@ if [[ "${#EXCLUDE_PATTERNS[@]}" -gt 0 ]]; then
   done
 fi
 
-7z a -t7z -mx="$BACKUP_LEVEL" "$ARCHIVE" "${BACKUP_DIRS[@]}" "${EXCLUDES[@]}"
+run_7z_add() {
+  7z a -t7z -mx="$BACKUP_LEVEL" "$ARCHIVE" "$@" "${EXCLUDES[@]}"
+}
+
+case "$PATH_MODE" in
+  target)
+    run_7z_add "${BACKUP_DIRS[@]}"
+    ;;
+  preserve)
+    for backup_dir in "${BACKUP_DIRS[@]}"; do
+      normalized_dir="${backup_dir%/}"
+      if [[ -z "$normalized_dir" ]]; then
+        normalized_dir="/"
+      fi
+
+      if [[ "$normalized_dir" == "/" ]]; then
+        echo "path_mode=preserve does not support '/' as a backup source" >&2
+        exit 1
+      fi
+
+      if [[ "$normalized_dir" == /* ]]; then
+        preserved_path="${normalized_dir#/}"
+        (
+          cd /
+          run_7z_add "$preserved_path"
+        )
+      else
+        run_7z_add "$normalized_dir"
+      fi
+    done
+    ;;
+  contents)
+    for backup_dir in "${BACKUP_DIRS[@]}"; do
+      mapfile -t top_entries < <(find "$backup_dir" -mindepth 1 -maxdepth 1 -printf '%f\n')
+      if [[ "${#top_entries[@]}" -eq 0 ]]; then
+        continue
+      fi
+      (
+        cd "$backup_dir"
+        run_7z_add "${top_entries[@]}"
+      )
+    done
+    ;;
+  *)
+    echo "invalid PATH_MODE: $PATH_MODE (expected: target|preserve|contents)" >&2
+    exit 1
+    ;;
+esac
 
 if [[ -n "$BACKUP_OWNER" ]]; then
   chown "$BACKUP_OWNER" "$ARCHIVE"
