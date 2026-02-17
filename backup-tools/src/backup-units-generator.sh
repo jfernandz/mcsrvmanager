@@ -124,6 +124,24 @@ service_exists() {
   [[ -n "$load_state" && "$load_state" != "not-found" ]]
 }
 
+service_or_template_exists() {
+  local service_unit="$1"
+  if service_exists "$service_unit"; then
+    return 0
+  fi
+
+  # Support template instances like mc@whatever.service by also checking mc@.service.
+  local base_name="${service_unit%.service}"
+  if [[ "$base_name" == *"@"* ]]; then
+    local template_unit="${base_name%%@*}@.service"
+    if service_exists "$template_unit"; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
 declare -A SERVICES=()
 
 while IFS= read -r service; do
@@ -147,8 +165,8 @@ for raw_service in "${!SERVICES[@]}"; do
   escaped_instance="$(systemd-escape -- "$raw_service")"
   backup_unit_name="backup@${escaped_instance}"
 
-  if ! service_exists "$service_unit"; then
-    echo "$raw_service: service unit not found ($service_unit), skipping" >&2
+  if ! service_or_template_exists "$service_unit"; then
+    echo "$raw_service: service unit not found ($service_unit or matching @.service template), skipping" >&2
     continue
   fi
 
