@@ -258,95 +258,95 @@ EOT
   GENERATED_REPORT+=("$service_unit|$config_path|$timer_unit_path|$backup_unit_name")
 done
 
-paths_block_exists="$(yq -r 'has("paths")' "$CONFIG_PATH")"
-if [[ "$paths_block_exists" == "true" ]]; then
-  mapfile -t paths_backup_dirs < <(yq -r \
-    '(.paths | select(type == "!!seq" or type == "array") | .[]?), (.paths | select(type == "!!map" or type == "object") | .dirs // [] | .[]?)' \
+specific_targets_block_exists="$(yq -r 'has("specific_targets")' "$CONFIG_PATH")"
+if [[ "$specific_targets_block_exists" == "true" ]]; then
+  mapfile -t specific_targets_backup_dirs < <(yq -r \
+    '(.specific_targets | select(type == "!!seq" or type == "array") | .[]?), (.specific_targets | select(type == "!!map" or type == "object") | .dirs // [] | .[]?)' \
     "$CONFIG_PATH")
-  if [[ "${#paths_backup_dirs[@]}" -eq 0 ]]; then
-    echo "paths: dirs must include at least one directory (or define paths as a non-empty list)" >&2
+  if [[ "${#specific_targets_backup_dirs[@]}" -eq 0 ]]; then
+    echo "specific_targets: dirs must include at least one directory (or define specific_targets as a non-empty list)" >&2
     exit 1
   fi
 
-  mapfile -t paths_excludes < <(yq -r \
-    '(.paths | select(type == "!!map" or type == "object") | .exclude_patterns // [] | .[]?)' \
+  mapfile -t specific_targets_excludes < <(yq -r \
+    '(.specific_targets | select(type == "!!map" or type == "object") | .exclude_patterns // [] | .[]?)' \
     "$CONFIG_PATH")
 
-  paths_backup_dir="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .output_dir) // $root.defaults.output_dir // $root.output_dir // "")' \
+  specific_targets_backup_dir="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .output_dir) // $root.defaults.output_dir // $root.output_dir // "")' \
     "$CONFIG_PATH")"
-  if [[ -z "$paths_backup_dir" ]]; then
-    echo "paths: output_dir is required (or provide global output_dir)" >&2
+  if [[ -z "$specific_targets_backup_dir" ]]; then
+    echo "specific_targets: output_dir is required (or provide global output_dir)" >&2
     exit 1
   fi
 
-  paths_backup_level="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .compression_lvl) // $root.defaults.compression_lvl // $root.compression_lvl // 3)' \
+  specific_targets_backup_level="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .compression_lvl) // $root.defaults.compression_lvl // $root.compression_lvl // 3)' \
     "$CONFIG_PATH")"
-  paths_retention_days="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .retention_days) // $root.defaults.retention_days // $root.retention_days // 14)' \
+  specific_targets_retention_days="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .retention_days) // $root.defaults.retention_days // $root.retention_days // 14)' \
     "$CONFIG_PATH")"
-  paths_on_calendar="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .on_calendar) // $root.defaults.on_calendar // $root.on_calendar // "*-*-* 11:30:00")' \
+  specific_targets_on_calendar="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .on_calendar) // $root.defaults.on_calendar // $root.on_calendar // "*-*-* 11:30:00")' \
     "$CONFIG_PATH")"
-  paths_randomized_delay="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .randomized_delay) // $root.defaults.randomized_delay // $root.randomized_delay // "15m")' \
+  specific_targets_randomized_delay="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .randomized_delay) // $root.defaults.randomized_delay // $root.randomized_delay // "15m")' \
     "$CONFIG_PATH")"
-  paths_persistent_raw="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .persistent) // $root.defaults.persistent // $root.persistent // true)' \
+  specific_targets_persistent_raw="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .persistent) // $root.defaults.persistent // $root.persistent // true)' \
     "$CONFIG_PATH")"
-  paths_backup_owner="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .owner) // $root.defaults.owner // $root.owner // "")' \
+  specific_targets_backup_owner="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .owner) // $root.defaults.owner // $root.owner // "")' \
     "$CONFIG_PATH")"
-  paths_stop_wait_seconds="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .stop_wait_seconds) // $root.defaults.stop_wait_seconds // $root.stop_wait_seconds // 300)' \
+  specific_targets_stop_wait_seconds="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .stop_wait_seconds) // $root.defaults.stop_wait_seconds // $root.stop_wait_seconds // 300)' \
     "$CONFIG_PATH")"
-  paths_path_mode_raw="$(yq -r \
-    '. as $root | (($root.paths | select(type == "!!map" or type == "object") | .path_mode) // $root.defaults.path_mode // $root.path_mode // "target")' \
+  specific_targets_path_mode_raw="$(yq -r \
+    '. as $root | (($root.specific_targets | select(type == "!!map" or type == "object") | .path_mode) // $root.defaults.path_mode // $root.path_mode // "target")' \
     "$CONFIG_PATH")"
 
-  paths_persistent="$(normalize_bool "$paths_persistent_raw" "true")"
-  paths_path_mode="$(normalize_path_mode "$paths_path_mode_raw" "target")"
-  paths_escaped_instance="$(systemd-escape -- "paths")"
-  paths_backup_unit_name="backup@${paths_escaped_instance}"
+  specific_targets_persistent="$(normalize_bool "$specific_targets_persistent_raw" "true")"
+  specific_targets_path_mode="$(normalize_path_mode "$specific_targets_path_mode_raw" "target")"
+  specific_targets_escaped_instance="$(systemd-escape -- "specific_targets")"
+  specific_targets_backup_unit_name="backup@${specific_targets_escaped_instance}"
 
-  paths_config_path="$SERVICE_CONFIG_DIR/paths.conf"
-  paths_timer_unit_name="${paths_backup_unit_name}.timer"
-  paths_timer_unit_path="$UNITS_DIR/${paths_timer_unit_name}"
+  specific_targets_config_path="$SERVICE_CONFIG_DIR/specific_targets.conf"
+  specific_targets_timer_unit_name="${specific_targets_backup_unit_name}.timer"
+  specific_targets_timer_unit_path="$UNITS_DIR/${specific_targets_timer_unit_name}"
 
   {
     echo "# Generated by backup-units-generator.sh"
-    printf 'BACKUP_DIR=%q\n' "$paths_backup_dir"
-    printf 'BACKUP_LEVEL=%q\n' "$paths_backup_level"
-    printf 'BACKUP_RETENTION_DAYS=%q\n' "$paths_retention_days"
-    printf 'BACKUP_PREFIX=%q\n' "paths"
-    printf 'BACKUP_OWNER=%q\n' "$paths_backup_owner"
-    printf 'STOP_WAIT_SECONDS=%q\n' "$paths_stop_wait_seconds"
+    printf 'BACKUP_DIR=%q\n' "$specific_targets_backup_dir"
+    printf 'BACKUP_LEVEL=%q\n' "$specific_targets_backup_level"
+    printf 'BACKUP_RETENTION_DAYS=%q\n' "$specific_targets_retention_days"
+    printf 'BACKUP_PREFIX=%q\n' "specific_targets"
+    printf 'BACKUP_OWNER=%q\n' "$specific_targets_backup_owner"
+    printf 'STOP_WAIT_SECONDS=%q\n' "$specific_targets_stop_wait_seconds"
     printf 'RESTART_AFTER_BACKUP=%q\n' "false"
-    printf 'PATH_MODE=%q\n' "$paths_path_mode"
-    write_bash_array "BACKUP_DIRS" "${paths_backup_dirs[@]}"
-    write_bash_array "EXCLUDE_PATTERNS" "${paths_excludes[@]}"
-  } > "$paths_config_path"
+    printf 'PATH_MODE=%q\n' "$specific_targets_path_mode"
+    write_bash_array "BACKUP_DIRS" "${specific_targets_backup_dirs[@]}"
+    write_bash_array "EXCLUDE_PATTERNS" "${specific_targets_excludes[@]}"
+  } > "$specific_targets_config_path"
 
-  cat > "$paths_timer_unit_path" <<EOT
+  cat > "$specific_targets_timer_unit_path" <<EOT
 [Unit]
-Description=Scheduled backup for configured paths
+Description=Scheduled backup for configured specific targets
 
 [Timer]
-OnCalendar=${paths_on_calendar}
-Persistent=${paths_persistent}
-RandomizedDelaySec=${paths_randomized_delay}
-Unit=${paths_backup_unit_name}.service
+OnCalendar=${specific_targets_on_calendar}
+Persistent=${specific_targets_persistent}
+RandomizedDelaySec=${specific_targets_randomized_delay}
+Unit=${specific_targets_backup_unit_name}.service
 
 [Install]
 WantedBy=timers.target
 EOT
 
-  GENERATED_REPORT+=("paths|$paths_config_path|$paths_timer_unit_path|$paths_backup_unit_name")
+  GENERATED_REPORT+=("specific_targets|$specific_targets_config_path|$specific_targets_timer_unit_path|$specific_targets_backup_unit_name")
 fi
 
 if [[ "${#GENERATED_REPORT[@]}" -eq 0 ]]; then
-  echo "no backup artifacts generated; no valid services found and no usable paths block" >&2
+  echo "no backup artifacts generated; no valid services found and no usable specific_targets block" >&2
   exit 1
 fi
 

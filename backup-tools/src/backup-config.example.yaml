@@ -8,7 +8,7 @@ persistent: true
 owner: wyre
 path_mode: target
 
-paths:
+specific_targets:
   - /etc
   - /usr/local/bin
   - /home/wyre/somefolder/id/like/tobackup

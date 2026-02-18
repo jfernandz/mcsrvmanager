@@ -4,7 +4,7 @@ Small set of generic backup scripts for systemd services.
 
 - `backup-units-generator.sh`: reads YAML/JSON config and generates:
   - `backup@<escaped-service>.timer`
-  - `backup@paths.timer` when top-level `paths:` is defined
+  - `backup@specific_targets.timer` when top-level `specific_targets:` is defined
   - per-service runtime config file (`<service>.conf`)
 - `backup.sh`: runtime executor used by `backup@.service`.
 
@@ -67,8 +67,8 @@ Top-level fallback keys:
 Service definitions must be defined under the `services:` mapping.
 Each key is the service name without the `.service` suffix.
 `exclude_patterns` is only read from each service block.
-Optional top-level `paths:` creates a separate generic backup job.
-`paths:` can be either:
+Optional top-level `specific_targets:` creates a separate generic backup job.
+`specific_targets:` can be either:
 
 - a list of directories/files
 - a mapping with `dirs` and optional overrides (`output_dir`, `compression_lvl`, `owner`, etc.)
@@ -101,7 +101,7 @@ persistent: true
 owner: wyre
 path_mode: target
 
-paths:
+specific_targets:
   - /etc
   - /usr/local/bin
   - /home/wyre/somefolder/id/like/tobackup
@@ -141,11 +141,11 @@ For each service:
 - Runtime config: `<service-config-dir>/<service>.conf`
   - Shell variables consumed by `backup.sh`
 
-For top-level `paths:` (if present):
+For top-level `specific_targets:` (if present):
 
-- Timer unit: `backup@paths.timer`
-  - Targets `backup@paths.service`
-- Runtime config: `<service-config-dir>/paths.conf`
+- Timer unit: `backup@specific_targets.timer`
+  - Targets `backup@specific_targets.service`
+- Runtime config: `<service-config-dir>/specific_targets.conf`
 
 == Generated Files Example
 
@@ -240,29 +240,29 @@ EXCLUDE_PATTERNS=(
 )
 ----
 
-`/etc/systemd/system/backup@paths.timer`:
+`/etc/systemd/system/backup@specific_targets.timer`:
 
 ----
 [Unit]
-Description=Scheduled backup for configured paths
+Description=Scheduled backup for configured specific targets
 
 [Timer]
 OnCalendar=*-*-* 11:30:00
 Persistent=true
 RandomizedDelaySec=15m
-Unit=backup@paths.service
+Unit=backup@specific_targets.service
 
 [Install]
 WantedBy=timers.target
 ----
 
-`/etc/backup-tools/paths.conf`:
+`/etc/backup-tools/specific_targets.conf`:
 
 ----
 BACKUP_DIR=/srv/backups
 BACKUP_LEVEL=3
 BACKUP_RETENTION_DAYS=14
-BACKUP_PREFIX=paths
+BACKUP_PREFIX=specific_targets
 BACKUP_OWNER=wyre
 STOP_WAIT_SECONDS=300
 RESTART_AFTER_BACKUP=false
@@ -300,19 +300,19 @@ After generation, run a backup directly:
 
 ----
 systemctl start backup@<escaped-service>.service
-systemctl start backup@paths.service
+systemctl start backup@specific_targets.service
 ----
 
 Or run the runner manually:
 
 ----
 ./backup.sh /etc/backup-tools/<service>.conf
-./backup.sh /etc/backup-tools/paths.conf
+./backup.sh /etc/backup-tools/specific_targets.conf
 ----
 
 == Notes
 
 - If `exclude_patterns` is omitted, no exclude patterns are applied.
 - Exclude entries should be plain patterns (for example `dynmap/web/*`); `backup.sh` adds `-xr!` automatically.
-- If neither valid services nor a usable `paths:` block are found, generation fails fast.
+- If neither valid services nor a usable `specific_targets:` block are found, generation fails fast.
 - If a service key does not map to an existing `<name>.service` unit, that service is skipped and no timer/config is generated for it.

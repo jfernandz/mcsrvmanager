@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-LOG=$(journalctl -u sshguard.service --no-pager -o short-iso)
+LOG=$(journalctl -u sshguard.service --no-pager -o short-iso --since "1 day ago")
 
 # 1) Build per-IP stats from "Attack from" lines (count + timestamps)
 # 2) Keep unique IP list in first-seen order

@@ -31,8 +31,8 @@ The workflow is intentionally generic and service-agnostic.
 
 Input config must be YAML or JSON and define services under a `services:` block.
 Service keys are service names *without* the `.service` suffix.
-Optional top-level `paths:` defines a separate generic backup job.
-`paths:` may be either a list of paths or a mapping with `dirs` and optional overrides (including `owner`).
+Optional top-level `specific_targets:` defines a separate generic backup job.
+`specific_targets:` may be either a list of paths or a mapping with `dirs` and optional overrides (including `owner`).
 
 Top-level fallback keys:
 
@@ -90,10 +90,10 @@ For each valid service entry:
 - `backup@<escaped-service>.timer` (targets `backup@<escaped-service>.service`)
 - `<service-config-dir>/<service>.conf`
 
-If top-level `paths:` is present and non-empty:
+If top-level `specific_targets:` is present and non-empty:
 
-- `backup@paths.timer` (targets `backup@paths.service`)
-- `<service-config-dir>/paths.conf`
+- `backup@specific_targets.timer` (targets `backup@specific_targets.service`)
+- `<service-config-dir>/specific_targets.conf`
 
 If a service key does not map to an existing `<name>.service` unit on the system,
 that entry is skipped and no artifacts are generated for it.
@@ -130,7 +130,7 @@ persistent: true
 owner: wyre
 path_mode: target
 
-paths:
+specific_targets:
   - /etc
   - /usr/local/bin
   - /home/wyre/somefolder/id/like/tobackup
