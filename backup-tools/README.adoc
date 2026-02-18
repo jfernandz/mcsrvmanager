@@ -7,17 +7,69 @@ Small set of generic backup scripts for systemd services.
   - `backup@specific_targets.timer` when top-level `specific_targets:` is defined
   - per-service runtime config file (`<service>.conf`)
 - `backup.sh`: runtime executor used by `backup@.service`.
+- `backup-fetcher.sh`: retrieves backups from a remote host through SSH using `rsync`.
 
 Template unit provided by this project:
 
 - `backup@.service` (installed as `/usr/lib/systemd/system/backup@.service` in package builds)
 
-== Requirements
+== Requirements (backup-tools)
 
 - `bash`
 - `systemd`
 - `7z`
 - `yq` (mikefarah/yq)
+
+== Requirements (backup-fetcher)
+
+- `bash`
+- `systemd` (only for `--install`/`--install-timer`)
+- `rsync`
+- `openssh`
+
+== Backup Fetcher
+
+Use `backup-fetcher.sh` to pull backup files from a remote server:
+
+----
+./backup-fetcher.sh \
+  --user backup \
+  --host backup.example.com \
+  --source /srv/backups/ \
+  --destination /srv/restore/backups
+----
+
+Available options include `--port`, `--identity-file`, `--delete`, and `--dry-run`.
+You can also configure it with environment variables:
+`FETCH_USER`, `FETCH_HOST`, `FETCH_SOURCE`, `FETCH_DESTINATION`,
+`FETCH_PORT`, `FETCH_IDENTITY_FILE`, `FETCH_DELETE`, and `FETCH_DRY_RUN`.
+CLI options override environment values.
+
+Install systemd units directly from the script:
+
+----
+sudo backup-fetcher.sh \
+  --install-timer \
+  --on-calendar "*-*-* 01:30:00"
+----
+
+This generates:
+
+- `/etc/systemd/system/backup-fetcher.service`
+- `/etc/systemd/system/backup-fetcher.timer`
+- `/etc/backup-tools/backup-fetcher.env` (template, only if missing)
+
+The generated service uses:
+
+- `ExecStart=/usr/local/bin/backup-fetcher.sh` by default
+- `EnvironmentFile=-/etc/backup-tools/backup-fetcher.env`
+
+Then enable the timer:
+
+----
+sudo systemctl daemon-reload
+sudo systemctl enable --now backup-fetcher.timer
+----
 
 == Quick Start
 
