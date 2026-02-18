@@ -46,6 +46,8 @@ You can also configure it with environment variables:
 `FETCH_PORT`, `FETCH_IDENTITY_FILE`, `FETCH_DELETE`, `FETCH_DRY_RUN`,
 and `FETCH_MAX_RETENTION_DAYS`.
 CLI options override environment values.
+If `--port`/`FETCH_PORT` is not set, SSH uses host-specific settings from
+the service user's SSH config (or OpenSSH defaults).
 
 Install systemd units directly from the script:
 

@@ -12,7 +12,7 @@ Options:
   --host <hostname>         Remote SSH host (required)
   --source <path>           Remote source directory/file (required)
   --destination <path>      Local destination directory (required)
-  --port <port>             SSH port (default: 22)
+  --port <port>             SSH port override (otherwise use SSH config/defaults)
   --identity-file <path>    SSH private key file
   --delete                  Delete local files not present on remote source
   --dry-run                 Show what would change without copying data
@@ -185,7 +185,7 @@ FETCH_SOURCE=
 FETCH_DESTINATION=
 
 # Optional:
-FETCH_PORT=22
+## FETCH_PORT=2222
 # FETCH_IDENTITY_FILE=/root/.ssh/id_ed25519
 FETCH_DELETE=false
 FETCH_DRY_RUN=false
@@ -346,7 +346,7 @@ REMOTE_USER="${FETCH_USER:-}"
 REMOTE_HOST="${FETCH_HOST:-}"
 SOURCE_PATH="${FETCH_SOURCE:-}"
 DESTINATION_PATH="${FETCH_DESTINATION:-}"
-SSH_PORT="${FETCH_PORT:-22}"
+SSH_PORT="${FETCH_PORT:-}"
 IDENTITY_FILE="${FETCH_IDENTITY_FILE:-}"
 USE_DELETE="$(normalize_bool "${FETCH_DELETE:-}" "false")"
 DRY_RUN="$(normalize_bool "${FETCH_DRY_RUN:-}" "false")"
@@ -408,7 +408,7 @@ if [[ -z "$DESTINATION_PATH" ]]; then
   exit 1
 fi
 
-if [[ ! "$SSH_PORT" =~ ^[0-9]+$ ]]; then
+if [[ -n "$SSH_PORT" && ! "$SSH_PORT" =~ ^[0-9]+$ ]]; then
   echo "--port must be numeric" >&2
   exit 1
 fi
@@ -435,7 +435,10 @@ fi
 
 mkdir -p "$DESTINATION_PATH"
 
-ssh_cmd=(ssh -p "$SSH_PORT")
+ssh_cmd=(ssh)
+if [[ -n "$SSH_PORT" ]]; then
+  ssh_cmd+=(-p "$SSH_PORT")
+fi
 if [[ -n "$IDENTITY_FILE" ]]; then
   ssh_cmd+=(-i "$IDENTITY_FILE")
 fi
