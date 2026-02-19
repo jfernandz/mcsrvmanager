@@ -1,7 +1,29 @@
 #!/bin/bash
 set -euo pipefail
 
-LOG=$(journalctl -u sshguard.service --no-pager -o short-iso --since "1 day ago")
+since_args=()
+while (($#)); do
+  case "$1" in
+    --since)
+      if (($# < 2)); then
+        echo "Error: --since requires a value" >&2
+        exit 1
+      fi
+      since_args=(--since "$2")
+      shift 2
+      ;;
+    --since=*)
+      since_args=(--since "${1#--since=}")
+      shift
+      ;;
+    *)
+      echo "Usage: $0 [--since VALUE|--since=VALUE]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+LOG=$(journalctl -u sshguard.service --no-pager -o short-iso "${since_args[@]}")
 
 # 1) Build per-IP stats from "Attack from" lines (count + timestamps)
 # 2) Keep unique IP list in first-seen order
